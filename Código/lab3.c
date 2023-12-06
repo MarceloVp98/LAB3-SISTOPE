@@ -93,7 +93,6 @@ int main(int argc, char *argv[])
     data_hebras.numero_celdas = numero_celdas;
     data_hebras.numero_chunk = numero_chunks;
     data_hebras.numero_particulas = numero_particulas;
-    data_hebras.particulas = particulas;
     data_hebras.celdas = celdas;
 
     // Se inicia el mutex de lectura.
@@ -115,11 +114,24 @@ int main(int argc, char *argv[])
         pthread_join(tids[i], NULL);
     }
 
-    /* // Imprimir el arreglo de partículas
-    for (int i = 0; i < numero_particulas; ++i)
+    for (int i = 0; i < numero_celdas; ++i)
     {
-        printf("Partícula %d: posicion_impacto=%d, energia=%d\n", i + 1, particulas[i].posicion_impacto, particulas[i].energia);
-    } */
+        printf("energia celda [%d]: %f.\n", i, celdas[i]);
+    }
+
+    printf("contador: %d.\n", contador);
+
+    // Se obtiene la celda con mayor energia.
+    int celda_mayor_energia = celdaMayorEnergia(data_hebras.celdas, data_hebras.numero_celdas);
+
+    // Si se escribio la flag D se imprime por pantalla el grafico.
+    if (imprimir == 1)
+    {
+        imprimirGrafico(data_hebras.celdas, data_hebras.numero_celdas, celda_mayor_energia);
+    }
+
+    // Se crea el archivo de salida y se escriben los datos en el.
+    escrituraArchivoSalida(nombre_archivo_salida, data_hebras.celdas, celda_mayor_energia, data_hebras.numero_celdas);
 
     // Liberar memoria
     free(particulas);

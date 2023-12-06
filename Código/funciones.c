@@ -14,37 +14,22 @@ double calculoEnergiaDepositada(float total_celdas, float celda_impactada,
 
 //--------------------------------------------------------------------------------------------------------
 
-/* double *calculoEnergiaDepositadaCeldas(particulas *particulas, int total_celdas,
-                                       int cantidad_particulas)
+double *calculoEnergiaDepositadaCeldas(double *celdas, int total_celdas, int posicion_impacto,
+                                       float energia)
 {
-    // Se crea el arreglo para almacenar la energia de las celdas.
-    double *energia_celdas = (double *)malloc(sizeof(double) * total_celdas);
-    if (energia_celdas == NULL)
-    {
-        // Manejo de error si no se pudo asignar memoria.
-        return NULL;
-    }
-    // Se asigna 0.0 como energia a cada celda.
-    for (int i = 0; i < total_celdas; ++i)
-    {
-        energia_celdas[i] = 0.0;
-    }
     double energia_actual;
     // Se calcula y se suma la energia para cada una de las celdas.
-    for (int i = 0; i < cantidad_particulas; ++i)
+    for (int i = 0; i < total_celdas; ++i)
     {
-        for (int j = 0; j < total_celdas; ++j)
+        energia_actual = calculoEnergiaDepositada(total_celdas, posicion_impacto,
+                                                  i, energia);
+        if (energia_actual >= (pow(10.0, -3.0) / total_celdas))
         {
-            energia_actual = calculoEnergiaDepositada(total_celdas, particulas[i].posicion_impacto,
-                                                      j, particulas[i].energia);
-            if (energia_actual >= (pow(10.0, -3.0) / total_celdas))
-            {
-                energia_celdas[j] = energia_celdas[j] + energia_actual;
-            }
+            celdas[i] = celdas[i] + energia_actual;
         }
     }
-    return energia_celdas;
-} */
+    return celdas;
+}
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -98,7 +83,8 @@ void *lecturaArchivo(void *arg)
     {
         for (int i = 0; i < data_hebras->numero_chunk; ++i)
         {
-            if(feof(data_hebras->archivo_entrada)){
+            if (feof(data_hebras->archivo_entrada))
+            {
                 break;
             }
 
@@ -114,19 +100,44 @@ void *lecturaArchivo(void *arg)
             // Se realiza un "signal" al mutex lectura al ya haber leído una línea.
             pthread_mutex_unlock(&lectura);
 
-            // Se realiza un "wait" al mutex escritura ya que una hebra va a escribir en un arreglo compartido.
-            pthread_mutex_lock(&escritura);
+            if (contador < data_hebras->numero_particulas)
+            {
+                // Se realiza un "wait" al mutex escritura ya que una hebra va a escribir en un arreglo compartido.
+                pthread_mutex_lock(&escritura);
 
-            data_hebras->particulas[contador].posicion_impacto = posicion_impacto;
-            data_hebras->particulas[contador].energia = energia_particula;
+                data_hebras->celdas = calculoEnergiaDepositadaCeldas(data_hebras->celdas,
+                                                                     data_hebras->numero_celdas, posicion_impacto, energia_particula);
 
-            contador = contador + 1;
+                contador = contador + 1;
 
-            // Se realizar un "signal" al mutex escritura al ya haber escrito en el arreglo compartido.
-            pthread_mutex_unlock(&escritura);
-
+                // Se realizar un "signal" al mutex escritura al ya haber escrito en el arreglo compartido.
+                pthread_mutex_unlock(&escritura);
+            }
         }
     }
 
     pthread_exit(NULL);
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void escrituraArchivoSalida(char *nombre_archivo_salida, double *celdas, int celda_mayor_energia,
+                            int numero_celdas)
+{
+    FILE *archivo_salida = fopen(nombre_archivo_salida, "w");
+
+    // Se escribe primero la celda con mayor energia
+    fprintf(archivo_salida, "%d ", celda_mayor_energia - 1);
+    fprintf(archivo_salida, "%f\n", celdas[celda_mayor_energia - 1]);
+
+    for (int i = 0; i < numero_celdas - 1; ++i)
+    {
+        fprintf(archivo_salida, "%d ", i);
+        fprintf(archivo_salida, "%f\n", celdas[i]);
+    }
+
+    fprintf(archivo_salida, "%d ", numero_celdas - 1);
+    fprintf(archivo_salida, "%f", celdas[numero_celdas - 1]);
+
+    fclose(archivo_salida);
 }

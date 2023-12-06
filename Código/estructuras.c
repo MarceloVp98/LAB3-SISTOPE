@@ -6,7 +6,7 @@
 struct particula
 {
     int posicion_impacto;
-    int energia;
+    float energia;
 };
 
 //--------------------------------------------------------------------------------------------------------
@@ -18,6 +18,5 @@ struct DataHebra
     int numero_celdas;
     int numero_chunk;
     int numero_particulas;
-    struct particula *particulas;
     double * celdas;
 };

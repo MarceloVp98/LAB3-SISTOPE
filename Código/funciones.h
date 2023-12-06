@@ -8,7 +8,7 @@
 
 #include <pthread.h>
 
-extern pthread_mutex_t lectura; 
+extern pthread_mutex_t lectura;
 extern pthread_mutex_t escritura;
 extern int contador;
 
@@ -39,9 +39,9 @@ ENTRADA: particulas(particulas *) -> arreglo de struct particulas que contiene t
          cantidad_particulas(int) -> cantidad total de particulas que impactaron el material.
 SALIDA:  energia_celdas(double *) - > arreglo con la energia de cada una de las celdas del material.
 DESCRIPCION: Funcion que calcula la energia total de cada una de las celdas del material.
-*/ 
-/* double *calculoEnergiaDepositadaCeldas(particulas *particulas, int total_celdas,
-                                       int cantidad_particulas); */
+*/
+double *calculoEnergiaDepositadaCeldas(double *celdas, int total_celdas, int posicion_impacto,
+                                       float energia);
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ ENTRADA: energia_celdas(double *) -> arreglo que contiene la energia total de ca
          total_celdas(int) -> cantidad total de celdas del material.
 SALIDA:  posicion + 1(int) -> posicion de la celda con la mayor energia dentro del arreglo.
 DESCRIPCION: Funcion que busca la celda con la mayor energia dentro del arrelo del celdas.
-*/  
+*/
 int celdaMayorEnergia(double *energia_celdas, int total_celdas);
 
 //--------------------------------------------------------------------------------------------------------
@@ -61,9 +61,13 @@ ENTRADA: energia_celdas(double *) -> arreglo que contiene la energia total de ca
          total_celdas(int) -> cantidad total de celdas del material.
 SALIDA:  vacio(void).
 DESCRIPCION: Funcion que imprime un grafico normalizado del las energias de cada celda.
-*/ 
+*/
 void imprimirGrafico(double *energia_celdas, int total_celdas, int celda_con_mayor_energia);
 
 //--------------------------------------------------------------------------------------------------------
 
-void *lecturaArchivo(void * arg);
+void *lecturaArchivo(void *arg);
+
+//--------------------------------------------------------------------------------------------------------
+
+void escrituraArchivoSalida(char *nombre_archivo_salida, double *celdas, int celda_mayor_energia, int numero_celdas);
