@@ -1,13 +1,5 @@
 #include <stdio.h>
-
-//--------------------------------------------------------------------------------------------------------
-
-// Descripción: struct para almacenar los datos de una particula.
-struct particula
-{
-    int posicion_impacto;
-    float energia;
-};
+#include <pthread.h>
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -18,5 +10,9 @@ struct DataHebra
     int numero_celdas;
     int numero_chunk;
     int numero_particulas;
-    double * celdas;
+    int numero_hebras;
+    double *celdas;
+    // Datos para identicar cuantas lecturas hizo cada una de las hebras.
+    pthread_t *id_hebras;
+    int *lineas_leidas;
 };

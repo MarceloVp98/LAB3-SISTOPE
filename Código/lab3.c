@@ -14,9 +14,10 @@ pthread_mutex_t escritura;
 
 int contador = 0;
 
-struct particula *particulas;
-
+// Se crean los arreglos globales.
 double *celdas;
+pthread_t *id_hebras;
+int *lineas_leidas;
 
 #include "funciones.h"
 
@@ -77,9 +78,7 @@ int main(int argc, char *argv[])
     int numero_particulas;
     fscanf(archivo_entrada, "%d", &numero_particulas);
 
-    // Se inicializa un arreglo de struct particula para pasarselo a las hebras.
-    particulas = (struct particula *)malloc(sizeof(struct particula) * numero_particulas);
-
+    id_hebras = (pthread_t *)malloc(sizeof(pthread_t) * numero_hebras);
     // Se inicializa arreglo para almacenar energia de las celdas.
     celdas = (double *)malloc(sizeof(double) * numero_celdas);
     for (int i = 0; i < numero_celdas; ++i)
@@ -87,12 +86,23 @@ int main(int argc, char *argv[])
         celdas[i] = 0;
     }
 
+    // Se asigna memoria para el arreglo contador de lineas leidas por cada hebra.
+    lineas_leidas = (int *)malloc(sizeof(int) * numero_hebras);
+    // Se establece cada posicion del arreglo en 0.
+    for (int i = 0; i < numero_hebras; ++i)
+    {
+        lineas_leidas[i] = 0;
+    }
+
     // Se crea un struct DataHebra para agrupas los datos a enviar a las hebras.
     struct DataHebra data_hebras;
     data_hebras.archivo_entrada = archivo_entrada;
+    data_hebras.numero_hebras = numero_hebras;
     data_hebras.numero_celdas = numero_celdas;
     data_hebras.numero_chunk = numero_chunks;
     data_hebras.numero_particulas = numero_particulas;
+    data_hebras.id_hebras = id_hebras;
+    data_hebras.lineas_leidas = lineas_leidas;
     data_hebras.celdas = celdas;
 
     // Se inicia el mutex de lectura.
@@ -102,10 +112,11 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&escritura, NULL);
 
     // Se crean las hebras segun la cantidad ingresada asignada en numero_hebras.
-    pthread_t tids[5];
+    pthread_t *tids = (pthread_t *)malloc(sizeof(pthread_t) * numero_hebras);
     for (int i = 0; i < numero_hebras; ++i)
     {
         pthread_create(&tids[i], NULL, lecturaArchivo, (void *)&data_hebras);
+        id_hebras[i] = tids[i];
     }
 
     // Se espera a que las hebras terminen.
@@ -114,28 +125,21 @@ int main(int argc, char *argv[])
         pthread_join(tids[i], NULL);
     }
 
-    for (int i = 0; i < numero_celdas; ++i)
-    {
-        printf("energia celda [%d]: %f.\n", i, celdas[i]);
-    }
-
-    printf("contador: %d.\n", contador);
-
     // Se obtiene la celda con mayor energia.
     int celda_mayor_energia = celdaMayorEnergia(data_hebras.celdas, data_hebras.numero_celdas);
 
     // Si se escribio la flag D se imprime por pantalla el grafico.
     if (imprimir == 1)
     {
-        imprimirGrafico(data_hebras.celdas, data_hebras.numero_celdas, celda_mayor_energia);
+        imprimirGrafico(data_hebras.celdas, data_hebras.numero_celdas, celda_mayor_energia, id_hebras, lineas_leidas, numero_hebras);
     }
 
     // Se crea el archivo de salida y se escriben los datos en el.
     escrituraArchivoSalida(nombre_archivo_salida, data_hebras.celdas, celda_mayor_energia, data_hebras.numero_celdas);
 
     // Liberar memoria
-    free(particulas);
     free(celdas);
+    free(lineas_leidas);
 
     return 0;
 }
