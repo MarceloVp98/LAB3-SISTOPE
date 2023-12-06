@@ -1,0 +1,1 @@
+./lab3 -N 5 -H 2 -i entrada.txt -o salida.txt -c 2 -D
