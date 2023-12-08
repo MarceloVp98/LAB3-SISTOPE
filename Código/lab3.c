@@ -3,23 +3,24 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <pthread.h>
+#include "funciones.h"
 
 // Los mutex se ocupan como variable global
 
-// mutex para EM de lectura y que dos o mas hebras lean la misma linea;
+// mutex para EM de lectura, para que dos o mas hebras no lean la misma linea;
 pthread_mutex_t lectura;
 
-// mutex para EM de escritura.
+// mutex para EM de escritura en arreglos compartidos.
 pthread_mutex_t escritura;
 
+// contador utilizado para tener constantemente la informacion de a cuantas particulas se le
+// a calculado la energia de impacto en las celdas.
 int contador = 0;
 
-// Se crean los arreglos globales.
+// Se crean arreglos globales.
 double *celdas;
 pthread_t *id_hebras;
 int *lineas_leidas;
-
-#include "funciones.h"
 
 int main(int argc, char *argv[])
 {
@@ -75,12 +76,16 @@ int main(int argc, char *argv[])
     // Se abre el archivo de entrada.
     FILE *archivo_entrada = fopen(nombre_archivo_entrada, "r");
 
+    // Se lee la primera linea para tener el dato de la cantidad de particulas en el archivo de entrada.
     int numero_particulas;
     fscanf(archivo_entrada, "%d", &numero_particulas);
 
+    // Se le asigna memoria al arreglo que almacenara las ids de las hebras.
     id_hebras = (pthread_t *)malloc(sizeof(pthread_t) * numero_hebras);
+
     // Se inicializa arreglo para almacenar energia de las celdas.
     celdas = (double *)malloc(sizeof(double) * numero_celdas);
+    // Se establece el valor de cada celda en 0.
     for (int i = 0; i < numero_celdas; ++i)
     {
         celdas[i] = 0;
@@ -115,7 +120,9 @@ int main(int argc, char *argv[])
     pthread_t *tids = (pthread_t *)malloc(sizeof(pthread_t) * numero_hebras);
     for (int i = 0; i < numero_hebras; ++i)
     {
+        // A cada hebra se le pasa la funcion lecturaArchivo y el struct data_hebras.
         pthread_create(&tids[i], NULL, lecturaArchivo, (void *)&data_hebras);
+        // Se almacena el id de la hebra en el arreglo id_hebras.
         id_hebras[i] = tids[i];
     }
 
@@ -137,9 +144,10 @@ int main(int argc, char *argv[])
     // Se crea el archivo de salida y se escriben los datos en el.
     escrituraArchivoSalida(nombre_archivo_salida, data_hebras.celdas, celda_mayor_energia, data_hebras.numero_celdas);
 
-    // Liberar memoria
+    // Se libera la memoria de los arreglos utilizados.
     free(celdas);
     free(lineas_leidas);
+    free(id_hebras);
 
     return 0;
 }

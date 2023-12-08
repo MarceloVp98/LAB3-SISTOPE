@@ -156,10 +156,10 @@ void *lecturaArchivo(void *arg)
 void escrituraArchivoSalida(char *nombre_archivo_salida, double *celdas, int celda_mayor_energia,
                             int numero_celdas)
 {
-    //Se abre un archivo de salida en modo escritura.u
+    // Se abre un archivo de salida en modo escritura.
     FILE *archivo_salida = fopen(nombre_archivo_salida, "w");
 
-    // Se escribe primero la celda con mayor energia
+    // Se escribe primero la celda con mayor energia.
     fprintf(archivo_salida, "%d ", celda_mayor_energia - 1);
     fprintf(archivo_salida, "%f\n", celdas[celda_mayor_energia - 1]);
 
